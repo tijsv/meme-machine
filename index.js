@@ -43,13 +43,13 @@ client.on('ready', () => {
 	// Interval that checks every 2 minutes if Glitch's stream is live
 	setInterval(async () => {
 
-		let streamerIsLiveNow = await checkIfLive(streamer);
+		let streamerStatus = await getStreamerStatus(streamer);
 
-		if(!streamerIsLive && streamerIsLiveNow) {
+		if(!streamerIsLive && streamerStatus === "live") {
 			mainChannel.send(`${streamer.name} is now live! Watch here:\n${streamer.link}`);
 			streamerIsLive = true;
 
-		} else if(streamerIsLive && !streamerIsLiveNow) {
+		} else if(streamerIsLive && streamerStatus === "offline") {
 			streamerIsLive = false;
 		}
 
@@ -203,7 +203,7 @@ function isURLValid(str) {
 	return pattern.test(str);
 }
 
-async function checkIfLive(streamer) {
+async function getStreamerStatus(streamer) {
 
 	console.log(`Checking if ${streamer.name} is live...`)
 
@@ -215,9 +215,10 @@ async function checkIfLive(streamer) {
 			}
 		})
 		.then(function(result) {
-			result.data.stream ? resolve(true) : resolve(false);
+			result.data.stream ? resolve("live") : resolve("offline");
 		})
 		.catch(function(error) {
+			reject("error");
 			console.log(error);
 		});
 
