@@ -13,7 +13,7 @@ mongoose.connect(`mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD
 .catch(err => console.log("Something went wrong when connecting to the database."));
 
 // Bot settings
-const specialChar = ">";
+const prefix = ">";
 const streamer = {
 	name: 'Glitch',
 	username: 'Glitch_it',
@@ -61,7 +61,7 @@ client.on('ready', () => {
 client.on('message', async msg => {
 
 	// If not a command, return
-	if(msg.content[0] !== specialChar) return;
+	if(msg.content[0] !== prefix) return;
 
 	// Get the command of the user
 	let args = msg.content.substr(1).split(" ");
@@ -104,7 +104,7 @@ client.on('message', async msg => {
 		// If the special character was used but the command is not recognised
 		default:
 			msg.channel.send(
-				`This is not a valid command ${msg.author.username}, you foolish mortal.\nType ${specialChar}help and you will get a list of all the commands I listen to.`
+				`This is not a valid command ${msg.author.username}, you foolish mortal.\nType ${prefix}help and you will get a list of all the commands I listen to.`
 			);
 
 	}
@@ -119,7 +119,7 @@ client.on('message', async msg => {
 function outputHelp(commands) {
 	let output = "...\n\nBeep boop. This is a list of all possible commands:\n```";
 	for(let i = 0; i < commands.length; i++) {
-		output += `\t${specialChar}${commands[i].name} : ${commands[i].description}\n`;
+		output += `\t${prefix}${commands[i].name} : ${commands[i].description}\n`;
 	}
 	output += '```\nFeature ideas can be sent to my master, Tigroh.\n\n...';
 	return output;
@@ -201,6 +201,8 @@ function isURLValid(str) {
 }
 
 async function checkIfLive(streamer) {
+
+	console.log(`Checking if ${streamer.name} is live...`)
 
 	return new Promise(function(resolve, reject) {
 
