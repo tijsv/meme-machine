@@ -59,6 +59,8 @@ client.on('ready', () => {
 
 });
 
+client.on('error', console.error);
+
 // On message sent in the server
 client.on('message', async msg => {
 
