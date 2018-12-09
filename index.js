@@ -209,21 +209,21 @@ async function getStreamerStatus(streamer) {
 
 	console.log(`Checking if ${streamer.name} is live...`)
 
-	return new Promise(function(resolve, reject) {
+	let output;
 
-		axios.get(`https://api.twitch.tv/kraken/streams/${streamer.username}`, { 
-			headers: {
-				'Client-ID': process.env.TWITCH_API_KEY
-			}
-		})
-		.then(function(result) {
-			result.data.stream ? resolve("live") : resolve("offline");
-		})
-		.catch(function(error) {
-			reject("error");
-			console.log(error);
-		});
-
+	axios.get(`https://api.twitch.tv/kraken/streams/${streamer.username}`, { 
+		headers: {
+			'Client-ID': process.env.TWITCH_API_KEY
+		}
+	})
+	.then(function(result) {
+		result.data.stream ? output = "live" : output = "offline";
+	})
+	.catch(function(error) {
+		output = "error";
+	})
+	.then(function() {
+		return output;
 	});
 
 }
