@@ -25,8 +25,9 @@ const commands = [
 	{ name: 'stream', description: `Get the link to ${streamer.name}\'s stream.` },
 	{ name: 'ping', description: 'Play ping pong with me. If you dare to oppose me human.' },
 	{ name: 'roll', description: 'Roll a dice. Test your luck.' },
-	{ name: 'addmeme', description: 'Add a meme to the server\'s meme list.' },
+	{ name: 'addmeme', description: `Add a meme to the server\'s meme list. (Usage: ${prefix}addmeme URL)` },
 	{ name: 'randommeme', description: 'Show a random meme of the server\'s meme list.' },
+	{ name: 'randomdrop', description: 'Show random coordinates to land on in Fornite.' },
 ];
 
 // On start of the bot
