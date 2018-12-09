@@ -104,6 +104,10 @@ client.on('message', async msg => {
 			let output = await getRandomMemeFromDB();
 			msg.channel.send(output);
 			break;
+
+		case "randomdrop":
+			msg.channel.send(getRandomLocation());
+			break;
 		
 		// If the special character was used but the command is not recognised
 		default:
@@ -229,6 +233,13 @@ async function getStreamerStatus(streamer) {
 		return output;
 	});
 
+}
+
+function getRandomLocation() {
+	let letterArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+	let randomLetter = Math.floor(Math.random() * 10);
+	let randomNumber = Math.floor(Math.random() * 10 + 1);
+	return `You have to land on ${letterArray[randomLetter] + randomNumber}. Good luck.`;
 }
 
 client.login(process.env.BOT_LOGIN);
