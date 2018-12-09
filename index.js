@@ -126,6 +126,7 @@ function outputHelp(commands) {
 }
 
 function deleteMessage(message) {
+	console.log(`'${message.content}' was hidden by ${message.author.username}.`);
 	return message.delete();
 }
 
@@ -143,16 +144,18 @@ function addMemeToDB(message, url) {
 	meme.save()
 	.then(result => {
 		console.log(`${result.URL} was added to the database.`)
+		return "Thank you for submitting. Your meme was added to the list.";
 	})
 	.catch(err => {
 		console.log(err)
 		return "Something went wrong saving this meme."
 	});
 
-	return "Thank you for submitting. Your meme was added to the list.";
 }
 
 async function getRandomMemeFromDB() {
+
+	console.log('Getting a random meme from the database...');
 
 	return new Promise(function(resolve, reject) {
 
