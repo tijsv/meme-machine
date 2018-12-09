@@ -223,6 +223,7 @@ async function getStreamerStatus(streamer) {
 		output = "error";
 	})
 	.then(function() {
+		console.log(`Axios response: ${output}`);
 		return output;
 	});
 
