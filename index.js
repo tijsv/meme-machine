@@ -45,12 +45,14 @@ client.on('ready', () => {
 
 		let streamerStatus = await getStreamerStatus(streamer);
 
-		if(!streamerIsLive && streamerStatus === "live") {
+		if(streamerStatus === "live" && !streamerIsLive) {
 			mainChannel.send(`${streamer.name} is now live! Watch here:\n${streamer.link}`);
 			streamerIsLive = true;
 
-		} else if(streamerIsLive && streamerStatus === "offline") {
+		} else if(streamerStatus === "offline" && streamerIsLive) {
 			streamerIsLive = false;
+		} else if(streamerStatus === "error") {
+			console.log('Something went wrong getting data from twitch API.');
 		}
 
 	}, 120000);
