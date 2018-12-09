@@ -52,14 +52,16 @@ client.on('ready', () => {
 
 		} else if(streamerStatus === "offline" && streamerIsLive) {
 			streamerIsLive = false;
+
 		} else if(streamerStatus === "error") {
 			console.log('Something went wrong getting data from twitch API.');
 		}
 
-	}, 120000);
+	}, 300000);
 
 });
 
+// Catching unexpected errors
 client.on('error', console.error);
 
 // On message sent in the server
@@ -106,6 +108,7 @@ client.on('message', async msg => {
 			msg.channel.send(output);
 			break;
 
+		// Return random coordinates of the Fortnite map
 		case "randomdrop":
 			msg.channel.send(getRandomLocation());
 			break;
@@ -225,15 +228,15 @@ async function getStreamerStatus(streamer) {
 	})
 	.then(function(result) {
 		result.data.stream ? output = "live" : output = "offline";
+		console.log(`Axios response: ${output}`);
+		return output;
 	})
 	.catch(function(error) {
 		output = "error";
-	})
-	.then(function() {
 		console.log(`Axios response: ${output}`);
 		return output;
-	});
-
+	})
+	
 }
 
 function getRandomLocation() {
