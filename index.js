@@ -102,10 +102,16 @@ client.on('message', async msg => {
 			msg.channel.send(addMemeToDB(msg, args[1]));
 			break;
 
+		// Remove a meme from the Database
+		case "removememe":
+			let output = await removeMemeFromDB(args[1]);
+			msg.channel.send(output);
+			break;
+
 		// Returns a random meme from the meme list
 		case "randommeme":
-			let output = await getRandomMemeFromDB();
-			msg.channel.send(output);
+			let output2 = await getRandomMemeFromDB();
+			msg.channel.send(output2);
 			break;
 
 		// Return random coordinates of the Fortnite map
@@ -165,6 +171,35 @@ function addMemeToDB(message, url) {
 
 }
 
+async function removeMemeFromDB(index) {
+	
+	console.log('Removing a meme from the database...');
+
+	return new Promise(function(resolve, reject) {
+
+			Meme.findOne().skip(parseInt(index-1)).exec(async function (err, result) {
+
+				if(err) {
+
+					console.log(err)
+					return reject("Deleting this meme didn't seem to work.");
+
+				}
+
+				Meme.findOneAndDelete({ _id: result._id }, function(err) {
+
+					if(err) return console.log(err);
+
+					resolve(`Meme ${index} perished. RIP :pray:`);
+
+				})
+
+			})
+
+	});
+
+}
+
 async function getRandomMemeFromDB() {
 
 	console.log('Getting a random meme from the database...');
@@ -185,7 +220,7 @@ async function getRandomMemeFromDB() {
 				let dateString = `${date.getUTCDate()}-${date.getUTCMonth()+1}-${date.getUTCFullYear()}`
 				let timeString = calculateTime(date).join(":");
 				let user = await client.fetchUser(result.userID);
-				let output = `\`Submitted by ${user.username} on ${dateString} at ${timeString}\`\n${result.URL}`;
+				let output = `\`Submitted by ${user.username} on ${dateString} at ${timeString} (index: ${random})\`\n${result.URL}`;
 
 				resolve(output);
 
