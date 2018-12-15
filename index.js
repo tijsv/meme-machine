@@ -6,6 +6,9 @@ const axios = require('axios');
 
 // Meme model
 const Meme = require('./models/meme.js');
+// quoteUser model
+const QuotesUser = require('./models/quotes.js');
+
 // Database connection
 mongoose.connect(`mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}`, { 
 	useNewUrlParser: true,
@@ -19,6 +22,7 @@ const streamer = {
 	username: 'Glitch_it',
 	link: 'https://www.twitch.tv/glitch_it'
 }
+const admins = ["320708435798654986", "226065793371209730"];
 
 // Commands
 const commands = [
@@ -26,7 +30,10 @@ const commands = [
 	{ name: 'ping', description: 'Play ping pong with me. If you dare to oppose me human.' },
 	{ name: 'roll', description: 'Roll a dice. Test your luck.' },
 	{ name: 'addmeme', description: `Add a meme to the server\'s meme list. (Usage: ${prefix}addmeme URL)` },
+	{ name: 'removememe', description: `Remove a meme from the server\'s meme list. (Usage: ${prefix}removememe ID)` },
 	{ name: 'randommeme', description: 'Show a random meme of the server\'s meme list.' },
+	{ name: 'addquote', description: `Add a quote to your list of quotes. (Usage: ${prefix}addquote TYPE QUOTE HERE)` },
+	{ name: 'randomquote', description: 'Show a random quote of the server\'s quotes lists.' },
 	{ name: 'randomdrop', description: 'Show random coordinates to land on in Fornite.' },
 ];
 
@@ -73,6 +80,14 @@ client.on('message', async msg => {
 	// Get the command of the user
 	let args = msg.content.substr(1).split(" ");
 	let command = args[0].toLowerCase();
+	let output = "";
+
+	// If -hide is used after command, the command message will be deleted
+	let hidden = false;
+	if(args[args.length - 1] === "-hide") {
+		hidden = true;
+		args.splice(args.length - 1, 1);
+	}
 
 	// Switch statement with all possible commands
 	switch(command) {
@@ -99,24 +114,37 @@ client.on('message', async msg => {
 
 		// Add a meme to the Database
 		case "addmeme":
-			msg.channel.send(addMemeToDB(msg, args[1]));
+			output = await addMemeToDB(msg, args[1]);
+			msg.channel.send(output);
 			break;
 
 		// Remove a meme from the Database
 		case "removememe":
-			let output = await removeMemeFromDB(args[1]);
+			output = await removeMemeFromDB(args[1], msg.author.id);
 			msg.channel.send(output);
 			break;
 
 		// Returns a random meme from the meme list
 		case "randommeme":
-			let output2 = await getRandomMemeFromDB();
-			msg.channel.send(output2);
+			output = await getRandomMemeFromDB();
+			msg.channel.send(output);
 			break;
 
 		// Return random coordinates of the Fortnite map
 		case "randomdrop":
 			msg.channel.send(getRandomLocation());
+			break;
+
+		// Add a random quote to the quote list
+		case "addquote":
+			output = await addQuoteToDB(msg, args);
+			msg.channel.send(output);
+			break;
+
+		// Return a random quote from the database
+		case "randomquote":
+			output = await getRandomQuoteFromDB();
+			msg.channel.send(output);
 			break;
 		
 		// If the special character was used but the command is not recognised
@@ -127,10 +155,7 @@ client.on('message', async msg => {
 
 	}
 
-	// If -hide is used after command, the command message will be deleted
-	if(args[args.length - 1] === "-hide") {
-		deleteMessage(msg);
-	}
+	if(hidden) deleteMessage(msg);
 
 });
 
@@ -139,7 +164,7 @@ function outputHelp(commands) {
 	for(let i = 0; i < commands.length; i++) {
 		output += `\t${prefix}${commands[i].name} : ${commands[i].description}\n`;
 	}
-	output += '```\nFeature ideas can be sent to my master, Tigroh.\n\n...';
+	output += '```\nQuestionable quote/meme entries will get deleted. Continuously adding offensive/inapropriate entries will result in a ban.\nFeature ideas can be sent to my master, Tigroh.\n\n...';
 	return output;
 }
 
@@ -148,53 +173,123 @@ function deleteMessage(message) {
 	return message.delete();
 }
 
-function addMemeToDB(message, url) {
+async function addQuoteToDB(message, args) {
 
-	if(!isURLValid(url)) return "The URL you submitted is not valid.";
+	return new Promise(function(resolve, reject) {
 
-	const meme = new Meme({
-		_id: mongoose.Types.ObjectId(),
-		userID: message.author.id,
-		URL: url,
-		time: message.createdAt
-	})
-	
-	meme.save()
-	.then(result => {
-		console.log(`${result.URL} was added to the database.`)
-		return "Thank you for submitting. Your meme was added to the list.";
-	})
-	.catch(err => {
-		console.log(err)
-		return "Something went wrong saving this meme."
+		const userID = message.author.id;
+		args.splice(0, 1);
+
+		const quote = {
+			_id: mongoose.Types.ObjectId(),
+			content: args.join(" "),
+			time: message.createdAt
+		}
+
+		QuotesUser.findOne({ userID: userID })
+		.then(async (result) => {
+
+			let quotesUser;
+			if(!result) {
+				quotesUser = await createNewQuotesUser(userID);
+				if(!quotesUser.quotes) reject("Something went wrong creating a new quotesUser.");
+			} else {
+				quotesUser = result;
+			}
+
+			quotesUser.quotes.push(quote);
+			quotesUser.save()
+			.then(result => {
+				console.log(`Quote '${quote.content}' was added tot the database by ${message.author.username}.`);
+				resolve("This quote was added to the database.");
+			})
+			.catch(err => {
+				console.log('Something went wrong while saving the new quote.\n', err);
+				reject("This quote could not be added to the database.");
+			});
+
+		})
+		.catch(err => {
+			console.log('Something went wrong while searching for a quotesUser.\n', err);
+			reject("This quote could not be added to the database.");
+		});
+
 	});
 
 }
 
-async function removeMemeFromDB(index) {
+async function createNewQuotesUser(userID) {
+
+	console.log('Creating a new quotesUser...');
+
+	return new Promise(function(resolve, reject) {
+		
+		const quotesUser = new QuotesUser({
+			userID: userID,
+			quotes: []
+		})
 	
+		quotesUser.save()
+		.then(result => {
+			resolve(quotesUser);
+		})
+		.catch(err => {
+			console.log("createNewQuotesUser error: ", err);
+			reject({});
+		});
+
+	})
+
+}
+
+async function addMemeToDB(message, url) {
+
+	if(!isURLValid(url)) return "The URL you submitted is not valid.";
+
+	return new Promise(function(resolve, reject) {
+		
+		const meme = new Meme({
+			_id: mongoose.Types.ObjectId(),
+			userID: message.author.id,
+			URL: url,
+			time: message.createdAt
+		})
+		
+		meme.save()
+		.then(result => {
+			console.log(`${result.URL} was added to the database.`)
+			resolve(`Thank you for submitting. Your meme was added to the list. (id: ${meme._id})`);
+		})
+		.catch(err => {
+			console.log(err)
+			reject("Something went wrong while saving this meme."); 
+		});
+
+	});
+
+}
+
+async function removeMemeFromDB(id, userID) {
+
+	if(!admins.includes(userID)) {
+		console.log(`User ${userID} tried to remove a meme without admin rights.`)
+		return "You don't have admin rights. You shall not pass.";  
+	}
+
 	console.log('Removing a meme from the database...');
 
 	return new Promise(function(resolve, reject) {
 
-			Meme.findOne().skip(parseInt(index-1)).exec(async function (err, result) {
+		Meme.findOneAndDelete({ _id: id }, function(err) {
 
-				if(err) {
+			if(err) {
+				console.log(err);
+				reject(`Something went wrong removing this element from the database.`);
+			}
 
-					console.log(err)
-					return reject("Deleting this meme didn't seem to work.");
+			resolve(`Meme ${id} perished. RIP :pray:`);
 
-				}
-
-				Meme.findOneAndDelete({ _id: result._id }, function(err) {
-
-					if(err) return console.log(err);
-
-					resolve(`Meme ${index} perished. RIP :pray:`);
-
-				})
-
-			})
+		})
 
 	});
 
@@ -214,13 +309,16 @@ async function getRandomMemeFromDB() {
 			const random = Math.floor(Math.random() * count);
 			Meme.findOne().skip(random).exec(async function (err, result) {
 
-				if(err) return console.log(err);
+				if(err) {
+					console.log(err);
+					reject("Something went wrong while getting a random meme from the database.");
+				}
 
 				let date = new Date(result.time);
 				let dateString = `${date.getUTCDate()}-${date.getUTCMonth()+1}-${date.getUTCFullYear()}`
 				let timeString = calculateTime(date).join(":");
 				let user = await client.fetchUser(result.userID);
-				let output = `\`Submitted by ${user.username} on ${dateString} at ${timeString} (index: ${random})\`\n${result.URL}`;
+				let output = `${result.URL}\n\`Submitted by ${user.username} on ${dateString} at ${timeString} (id: ${result._id})\``;
 
 				resolve(output);
 
@@ -230,6 +328,43 @@ async function getRandomMemeFromDB() {
 
 	});
 
+}
+
+async function getRandomQuoteFromDB() {
+	console.log('Getting a random quote from the database...');
+
+	return new Promise(function(resolve, reject) {
+
+		// CountDocument is an Async function, so you need to wait for the callback function to execute
+		QuotesUser.countDocuments({}, function(err, count) {
+
+			if(err) return console.log(err);
+
+			const randomQuotesUserIndex = Math.floor(Math.random() * count);
+			QuotesUser.findOne().skip(randomQuotesUserIndex).exec(async function (err, result) {
+
+				if(err) {
+					console.log(err);
+					reject("Something went wrong while getting a random quote from the database.");
+				}
+
+				const randomQuoteIndex =  Math.floor(Math.random() * result.quotes.length);
+
+				const randomQuote = result.quotes[randomQuoteIndex];
+
+				let date = new Date(randomQuote.time);
+				let dateString = `${date.getUTCDate()}-${date.getUTCMonth()+1}-${date.getUTCFullYear()}`
+				let timeString = calculateTime(date).join(":");
+				let user = await client.fetchUser(result.userID);
+				let output = `${randomQuote.content}\n\`Submitted by ${user.username} on ${dateString} at ${timeString} (id: ${randomQuote._id})\``;
+
+				resolve(output);
+
+			})
+
+		});
+
+	});
 }
 
 function calculateTime(date) {
@@ -252,8 +387,6 @@ function isURLValid(str) {
 
 async function getStreamerStatus(streamer) {
 
-	console.log(`Checking if ${streamer.name} is live...`)
-
 	let output;
 
 	axios.get(`https://api.twitch.tv/kraken/streams/${streamer.username}`, { 
@@ -263,12 +396,10 @@ async function getStreamerStatus(streamer) {
 	})
 	.then(function(result) {
 		result.data.stream ? output = "live" : output = "offline";
-		console.log(`Axios response: ${output}`);
 		return output;
 	})
 	.catch(function(error) {
 		output = "error";
-		console.log(`Axios response: ${output}`);
 		return output;
 	})
 	
