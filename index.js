@@ -6,8 +6,8 @@ const axios = require('axios');
 
 // Meme model
 const Meme = require('./models/meme.js');
-// quoteUser model
-const QuotesUser = require('./models/quotes.js');
+// quote model
+const Quote = require('./models/quotes.js');
 
 // Database connection
 mongoose.connect(`mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}`, { 
@@ -180,65 +180,24 @@ async function addQuoteToDB(message, args) {
 		const userID = message.author.id;
 		args.splice(0, 1);
 
-		const quote = {
+		const quote = new Quote ({
 			_id: mongoose.Types.ObjectId(),
+			userID: userID,
 			content: args.join(" "),
 			time: message.createdAt
-		}
+		});
 
-		QuotesUser.findOne({ userID: userID })
-		.then(async (result) => {
-
-			let quotesUser;
-			if(!result) {
-				quotesUser = await createNewQuotesUser(userID);
-				if(!quotesUser.quotes) reject("Something went wrong creating a new quotesUser.");
-			} else {
-				quotesUser = result;
-			}
-
-			quotesUser.quotes.push(quote);
-			quotesUser.save()
-			.then(result => {
-				console.log(`Quote '${quote.content}' was added tot the database by ${message.author.username}.`);
-				resolve("This quote was added to the database.");
-			})
-			.catch(err => {
-				console.log('Something went wrong while saving the new quote.\n', err);
-				reject("This quote could not be added to the database.");
-			});
-
+		quote.save()
+		.then(result => {
+			console.log(`Quote '${quote.content}' was added tot the database by ${message.author.username}.`);
+			resolve("This quote was added to the database.");
 		})
 		.catch(err => {
-			console.log('Something went wrong while searching for a quotesUser.\n', err);
+			console.log('Something went wrong while saving the new quote.\n', err);
 			reject("This quote could not be added to the database.");
 		});
 
 	});
-
-}
-
-async function createNewQuotesUser(userID) {
-
-	console.log('Creating a new quotesUser...');
-
-	return new Promise(function(resolve, reject) {
-		
-		const quotesUser = new QuotesUser({
-			userID: userID,
-			quotes: []
-		})
-	
-		quotesUser.save()
-		.then(result => {
-			resolve(quotesUser);
-		})
-		.catch(err => {
-			console.log("createNewQuotesUser error: ", err);
-			reject({});
-		});
-
-	})
 
 }
 
@@ -296,7 +255,6 @@ async function removeMemeFromDB(id, userID) {
 }
 
 async function getRandomMemeFromDB() {
-
 	console.log('Getting a random meme from the database...');
 
 	return new Promise(function(resolve, reject) {
@@ -335,35 +293,33 @@ async function getRandomQuoteFromDB() {
 
 	return new Promise(function(resolve, reject) {
 
-		// CountDocument is an Async function, so you need to wait for the callback function to execute
-		QuotesUser.countDocuments({}, function(err, count) {
+		Quote.countDocuments({}, function(err, count) {
 
 			if(err) return console.log(err);
 
-			const randomQuotesUserIndex = Math.floor(Math.random() * count);
-			QuotesUser.findOne().skip(randomQuotesUserIndex).exec(async function (err, result) {
+			const randomQuoteIndex =  Math.floor(Math.random() * count);
 
-				if(err) {
-					console.log(err);
-					reject("Something went wrong while getting a random quote from the database.");
-				}
+			Quote.findOne().skip(randomQuoteIndex)
+			.then(async result => {
 
-				const randomQuoteIndex =  Math.floor(Math.random() * result.quotes.length);
-
-				const randomQuote = result.quotes[randomQuoteIndex];
-
-				let date = new Date(randomQuote.time);
+				let date = new Date(result.time);
 				let dateString = `${date.getUTCDate()}-${date.getUTCMonth()+1}-${date.getUTCFullYear()}`
 				let timeString = calculateTime(date).join(":");
 				let user = await client.fetchUser(result.userID);
-				let output = `${randomQuote.content}\n\`Submitted by ${user.username} on ${dateString} at ${timeString} (id: ${randomQuote._id})\``;
+				let output = `${result.content}\n\`Submitted by ${user.username} on ${dateString} at ${timeString} (id: ${result._id})\``;
 
 				resolve(output);
 
 			})
+			.catch(err => {
+				reject("Something went wrong while getting a random quote from the database.");
+			})
 
-		});
+		}).catch(err => { console.log("CountDocuments fail") });
 
+	}).catch(err => { 
+		console.log("getRandomQuoteFromDB Promise error\n", err);
+		return "Currently there are no quotes stored.";
 	});
 }
 
