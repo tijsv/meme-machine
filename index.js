@@ -382,8 +382,7 @@ async function getRandomJoke() {
 			}
 		   })
 		.then(result => {
-			console.log(result, result.joke);
-			resolve(result.joke);
+			resolve(result.data.joke);
 		})
 		.catch(err => {
 			console.log(err);
