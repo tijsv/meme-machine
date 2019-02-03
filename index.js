@@ -29,6 +29,7 @@ const commands = [
 	{ name: 'stream', description: `Get the link to ${streamer.name}\'s stream.` },
 	{ name: 'ping', description: 'Play ping pong with me. If you dare to oppose me human.' },
 	{ name: 'roll', description: 'Roll a dice. Test your luck.' },
+	{ name: 'joke', description: 'Let me tell you a random dad joke.' },
 	{ name: 'addmeme', description: `Add a meme to the server\'s meme list. (Usage: ${prefix}addmeme URL)` },
 	{ name: 'removememe', description: `Remove a meme from the server\'s meme list. (Usage: ${prefix}removememe ID)` },
 	{ name: 'randommeme', description: 'Show a random meme of the server\'s meme list.' },
@@ -105,6 +106,11 @@ client.on('message', async msg => {
 		// Roll a dice
 		case "roll":
 			msg.channel.send(`You rolled ${Math.floor(Math.random() * 6) + 1}!`);
+			break;
+
+		case "joke":
+			output = await getRandomJoke();
+			msg.channel.send(output);
 			break;
 
 		// Returns a link to Glitch's stream
@@ -366,6 +372,20 @@ function getRandomLocation() {
 	let randomLetter = Math.floor(Math.random() * 10);
 	let randomNumber = Math.floor(Math.random() * 10 + 1);
 	return `You have to land on ${letterArray[randomLetter] + randomNumber}. Good luck.`;
+}
+
+async function getRandomJoke() {
+	return new Promise((resolve, reject) => {
+		axios.get('https://icanhazdadjoke.com/')
+		.then(result => {
+			console.log(result, result.joke);
+			resolve(result.joke);
+		})
+		.catch(err => {
+			console.log(err);
+			reject('No joke found.');
+		})
+	});
 }
 
 client.login(process.env.BOT_LOGIN);
