@@ -376,7 +376,11 @@ function getRandomLocation() {
 
 async function getRandomJoke() {
 	return new Promise((resolve, reject) => {
-		axios.get('https://icanhazdadjoke.com/')
+		axios.get('https://icanhazdadjoke.com/', {
+			headers: {
+				Accept: "application/json"
+			}
+		   })
 		.then(result => {
 			console.log(result, result.joke);
 			resolve(result.joke);
