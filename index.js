@@ -50,7 +50,7 @@ client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 	testingChannel.send("Beep boop. Meme Machine at your service.");
 
-	cron.schedule('0 34 0 * * *', () => {
+	cron.schedule('0 37 22 * * *', () => {
 		testingChannel.send('It\'s P(h)ill time');
 	});
 
