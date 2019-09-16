@@ -54,6 +54,9 @@ client.on('ready', () => {
 		testingChannel.send('It\'s P(h)ill time');
 	});
 
+	var adata = new Date();
+	testingChannel.send(adate.toString());
+
 	// Interval that checks every 2 minutes if Glitch's stream is live
 	setInterval(async () => {
 
