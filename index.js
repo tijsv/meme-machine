@@ -50,10 +50,8 @@ client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 	testingChannel.send("Beep boop. Meme Machine at your service.");
 
-	cron.schedule('0 44 22 * * *', () => {
-		var adate = new Date();
-		testingChannel.send(adate.toString());
-		testingChannel.send('It\'s P(h)ill time');
+	cron.schedule('0 0 16 * * *', () => {
+		testingChannel.send('It\'s Dr. P(h)ill time :pill: :pill: :pill:');
 	});
 
 	// Interval that checks every 2 minutes if Glitch's stream is live
