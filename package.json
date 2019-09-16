@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
-    "postinstall": "opencollective-postinstall"
+    "postinstall": "opencollective-postinstall || exit 0"
   },
   "author": "",
   "license": "ISC",
@@ -16,5 +16,8 @@
     "mongoose": "^5.3.15",
     "nodemon": "^1.18.7",
     "npm": "^6.11.3"
+  },
+  "devDependencies": {
+    "opencollective-postinstall": "^2.0.2"
   }
 }
