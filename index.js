@@ -3,7 +3,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const mongoose = require('mongoose');
 const axios = require('axios');
-const cron = require('node-cron');
+// const cron = require('node-cron');
 
 // Meme model
 const Meme = require('./models/meme.js');
@@ -50,9 +50,9 @@ client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 	testingChannel.send("Beep boop. Meme Machine at your service.");
 
-	cron.schedule('0 5 0 * * *', () => {
-		testingChannel.send('It\'s P(h)ill time');
-	});
+	// cron.schedule('0 5 0 * * *', () => {
+	// 	testingChannel.send('It\'s P(h)ill time');
+	// });
 
 	// Interval that checks every 2 minutes if Glitch's stream is live
 	setInterval(async () => {
