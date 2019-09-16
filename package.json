@@ -17,7 +17,5 @@
     "nodemon": "^1.18.7",
     "npm": "^6.11.3"
   },
-  "devDependencies": {
-    "opencollective-postinstall": "^2.0.2"
-  }
+  "devDependencies": {}
 }
