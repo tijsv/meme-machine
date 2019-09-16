@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
-    "postinstall": "opencollective-postinstall || exit 0"
+    "dev": "nodemon"
   },
   "author": "",
   "license": "ISC",
@@ -14,8 +13,8 @@
     "discord.js": "^11.4.2",
     "dotenv": "^6.2.0",
     "mongoose": "^5.3.15",
+    "node-cron": "^2.0.3",
     "nodemon": "^1.18.7",
     "npm": "^6.11.3"
-  },
-  "devDependencies": {}
+  }
 }
